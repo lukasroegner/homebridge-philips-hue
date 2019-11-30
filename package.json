@@ -1,0 +1,28 @@
+{
+  "name": "homebridge-philips-hue",
+  "version": "0.1.0",
+  "description": "Plugin for using Philips Hue lightbulbs and motion sensors in homebridge.",
+  "license": "MIT",
+  "keywords": [
+    "homebridge-plugin",
+    "homebridge",
+    "homebridge-philips-hue",
+    "philips-hue",
+    "hue"
+  ],
+  "dependencies": {
+    "huejay": "^1.9.0",
+    "bottleneck": "^2.19.5"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/lukasroegner/homebridge-philips-hue.git"
+  },
+  "bugs": {
+    "url": "http://github.com/lukasroegner/homebridge-philips-hue/issues"
+  },
+  "engines": {
+    "node": ">=0.12.0",
+    "homebridge": ">=0.2.0"
+  }
+}
