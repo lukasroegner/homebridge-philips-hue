@@ -6,7 +6,7 @@ The reason for development of the plugin is that most plugins (and the official 
 
 ## Lights
 
-The lights are exposes as light bulbs with the following features:
+The lights are exposed as light bulbs with the following features:
 * On/Off
 * Brightness (if supported by the light bulb)
 * Color (if supported by the light bulb)
@@ -16,11 +16,11 @@ Only Philips lights are supported by this plugin.
 
 ## Motion Sensors
 
-The motion sensors are exposes as occupancy sensors. The activation period is retrieved from the rule engine of the Philips Hue bridge (those values are configured in the Philips app). The exposed accessory has multiple services:
+The motion sensors are exposed as occupancy sensors. The activation period is retrieved from the rule engine of the Philips Hue bridge (those values are configured in the Philips app). The exposed accessory has multiple services:
 * Presence sensor
 * Temperature sensor
 * Light level sensor
-* Switch for enabled/disabling the motion sensor
+* Switch for enabling/disabling the motion sensor
 
 Only Philips motion sensors are supported by this plugin.
 
