@@ -14,6 +14,11 @@ The lights are exposed as light bulbs with the following features:
 
 Only Philips lights are supported by this plugin.
 
+## Entertainment Groups
+
+Entertainment groups are exposed as switches with the following features:
+* Off
+
 ## Motion Sensors
 
 The motion sensors are exposed as occupancy sensors. The activation period is retrieved from the rule engine of the Philips Hue bridge (those values are configured in the Philips app). The exposed accessory has multiple services:
@@ -48,7 +53,8 @@ You have to create new credentials to communicate with the Philips Hue bridge:
         {
             "platform": "PhilipsHuePlatform",
             "bridgeIpAddress": "<BRIDGE-IP-ADDRESS>",
-            "bridgeApiUsername": "<BRIDGE-API-USERNAME>"
+            "bridgeApiUsername": "<BRIDGE-API-USERNAME>",
+            "entertainmentGroups": false
         }
     ]
 }
@@ -57,3 +63,5 @@ You have to create new credentials to communicate with the Philips Hue bridge:
 **bridgeIpAddress**: The IP address of your Philips Hue bridge.
 
 **bridgeApiUsername**: The access token for the user.
+
+**entertainmentGroups** (optional): Can be used to enable entertainment groups in HomeKit. Defaults to `false`.

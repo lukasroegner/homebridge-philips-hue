@@ -5,6 +5,7 @@ const Bottleneck = require('bottleneck');
 const ColorConversion = require('./color-conversion');
 const LightBulbDevice = require('./light-bulb-device');
 const MotionSensorDevice = require('./motion-sensor-device');
+const EntertainmentGroup = require('./entertainment-group');
 
 /**
  * Initializes a new platform instance for the Philips Hue plugin.
@@ -33,14 +34,16 @@ function PhilipsHuePlatform(log, config, api) {
     // Defines the variables that are used throughout the platform
     platform.log = log;
     platform.config = config;
-    platform.devices = [];
+    platform.devicesOrGroups = [];
     platform.lightBulbs = [];
     platform.motionSensors = [];
+    platform.entertainmentGroups = [];
     platform.accessories = [];
 
     // Initializes the configuration
     platform.config.bridgeIpAddress = platform.config.bridgeIpAddress || null;
     platform.config.bridgeApiUsername = platform.config.bridgeApiUsername || null;
+    platform.config.entertainmentGroups = platform.config.entertainmentGroups || false;
     platform.config.bridgePort = 80;
     platform.config.bridgeApiTimeout = 15000;
     platform.config.requestsPerSecond = 5;
@@ -94,7 +97,7 @@ function PhilipsHuePlatform(log, config, api) {
                 platform.log('Create light bulb with unique ID ' + light.uniqueId + '.');
                 const device = new LightBulbDevice(platform, light);
                 platform.lightBulbs.push(device);
-                platform.devices.push(device);
+                platform.devicesOrGroups.push(device);
             }
         }, function() {
             platform.log('Error while getting the lights. Please check the credentials.');
@@ -137,7 +140,7 @@ function PhilipsHuePlatform(log, config, api) {
                         platform.log('Create motion sensor with unique ID ' + motionSensorDevice.uniqueId + '.');
                         const device = new MotionSensorDevice(platform, motionSensorDevice.uniqueId, motionSensorDevice.sensors, motionSensorDevice.rules);
                         platform.motionSensors.push(device);
-                        platform.devices.push(device);
+                        platform.devicesOrGroups.push(device);
                     } 
                 }
             }, function() {
@@ -147,9 +150,39 @@ function PhilipsHuePlatform(log, config, api) {
             platform.log('Error while getting the lights. Please check the credentials.');
         }));
 
+        // Defines the command for getting raw group data
+        function GetAllGroupsRaw() { };
+        GetAllGroupsRaw.prototype.invoke = function (client) {
+            return client.getTransport().sendRequest({ url: 'api/' + client.username + '/groups' }).then(function (result) {
+                return Object.keys(result).map(function (groupId) {
+                    result[groupId].id = groupId;
+                    return result[groupId];
+                });
+            });
+        };
+
+        // Checks whether entertainment groups should be exposed
+        if (platform.config.entertainmentGroups) {
+            promises.push(platform.limiter.schedule(function() { return platform.client.invokeCommand(new GetAllGroupsRaw()); }).then(function(groups) {
+                for (let i = 0; i < groups.length; i++) {
+                    const group = groups[i];
+
+                    // Creates the group instance and adds it to the list of all groups
+                    if (group.type === 'Entertainment') {
+                        platform.log('Create group with unique ID group-' + group.id + '.');
+                        const entertainmentGroup = new EntertainmentGroup(platform, group);
+                        platform.entertainmentGroups.push(entertainmentGroup);
+                        platform.devicesOrGroups.push(entertainmentGroup);
+                    }
+                }
+            }, function() {
+                platform.log('Error while getting the lights. Please check the credentials.');
+            }));
+        }
+
         // Removes the accessories that are not bound to a light bulb or motion sensor
         Promise.all(promises).then(function() {
-            let unusedAccessories = platform.accessories.filter(function(a) { return !platform.devices.some(function(l) { return l.uniqueId === a.context.uniqueId; }); });
+            let unusedAccessories = platform.accessories.filter(function(a) { return !platform.devicesOrGroups.some(function(l) { return l.uniqueId === a.context.uniqueId; }); });
             for (let i = 0; i < unusedAccessories.length; i++) {
                 const unusedAccessory = unusedAccessories[i];
                 platform.log('Removing accessory with unique ID ' + unusedAccessory.context.uniqueId + ' and kind ' + unusedAccessory.context.kind + '.');
@@ -157,7 +190,7 @@ function PhilipsHuePlatform(log, config, api) {
             }
             platform.api.unregisterPlatformAccessories(platform.pluginName, platform.platformName, unusedAccessories);
 
-            // Starts the timer for updating lights and sensors
+            // Starts the timer for updating lights, groups and sensors
             setInterval(function() {
                 platform.limiter.schedule(function() { return platform.client.lights.getAll(); }).then(function(lights) {
                     for (let i = 0; i < platform.lightBulbs.length; i++) {
@@ -168,6 +201,20 @@ function PhilipsHuePlatform(log, config, api) {
                     platform.log('Error while getting the lights.');
                 });
             }, platform.config.updateInterval);
+            if (platform.config.entertainmentGroups) {
+                setTimeout(function() {
+                    setInterval(function() {
+                        platform.limiter.schedule(function() { return platform.client.invokeCommand(new GetAllGroupsRaw()); }).then(function(groups) {
+                            for (let i = 0; i < platform.entertainmentGroups.length; i++) {
+                                const entertainmentGroup = platform.entertainmentGroups[i];
+                                entertainmentGroup.update(groups);
+                            }
+                        }, function() {
+                            platform.log('Error while getting the groups.');
+                        });
+                    }, platform.config.updateInterval);
+                }, platform.config.updateInterval / 3.0);
+            }
             setTimeout(function() {
                 setInterval(function() {
                     platform.limiter.schedule(function() { return platform.client.sensors.getAll(); }).then(function(sensors) {
