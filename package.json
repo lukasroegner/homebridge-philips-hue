@@ -1,6 +1,6 @@
 {
   "name": "homebridge-philips-hue",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Plugin for using Philips Hue lightbulbs and motion sensors in homebridge.",
   "license": "MIT",
   "keywords": [
