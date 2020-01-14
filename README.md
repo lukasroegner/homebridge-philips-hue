@@ -39,6 +39,7 @@ You have to create new credentials to communicate with the Philips Hue bridge:
 * Make an HTTP POST request to `http://<BRIDGE-IP>/api`
 * The body of the request has to be JSON: `{ "devicetype": "homebridge-philips-hue" }`
 * The response contains a `username` string
+Hint: Use a software like Postman or cURL to make the requests.
 
 ## Configuration
 
