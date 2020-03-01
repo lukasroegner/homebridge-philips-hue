@@ -53,7 +53,10 @@ Hint: Use a software like Postman or cURL to make the requests.
             "blacklist": [
                 "<UNIQUE-ID-1>",
                 "<UNIQUE-ID-2>"
-            ]
+            ],
+            "isApiEnabled": false,
+            "apiPort": 40660,
+            "apiToken": "<YOUR-TOKEN>"
         }
     ]
 }
@@ -64,3 +67,52 @@ Hint: Use a software like Postman or cURL to make the requests.
 **bridgeApiUsername**: The access token for the user.
 
 **blacklist** (optional): A list of unique IDs that should not be exposed to HomeKit. The IDs can be retrieved in the log when homebridge is started.
+
+**isApiEnabled** (optional): Enables an HTTP API for controlling the Hue system. Defaults to `false`. See **API** for more information.
+
+**apiPort** (optional): The port that the API (if enabled) runs on. Defaults to `40660`, please change this setting of the port is already in use.
+
+**apiToken** (optional): The token that has to be included in each request of the API. Is required if the API is enabled and has no default value.
+
+## API
+
+This plugin also provides an HTTP API to control some features of the Hue system. It has been created so that you can further automate the system with HomeKit shortcuts. Starting with iOS 13, you can use shortcuts for HomeKit automation. Those automations that are executed on the HomeKit coordinator (i.e. iPad, AppleTV or HomePod) also support HTTP requests, which means you can automate your Hue system without annoying switches and buttons exposed in HomeKit.
+
+If the API is enabled, it can be reached at the specified port on the host of this plugin. 
+```
+http://<YOUR-HOST-IP-ADDRESS>:<apiPort>
+```
+
+The token has to be specified as value of the `Authorization` header on each request:
+```
+Authorization: <YOUR-TOKEN>
+```
+
+## API - GET
+
+Use the `groups` endpoint to retrieve the state of a group. The IDs for groups can be found in the logs when homebridge is started. The HTTP method has to be `GET`:
+```
+http://<YOUR-HOST-IP-ADDRESS>:<apiPort>/groups/<GROUP-ID>
+```
+
+The response is a JSON response, the following properties are included:
+```
+{
+    "anyOn": true|false,
+    "allOn": true|false
+}
+```
+
+## API - POST
+
+Use the `groups` endpoint to set state of a group. The HTTP method has to be `POST`:
+```
+http://<YOUR-HOST-IP-ADDRESS>:<apiPort>/groups/<GROUP-ID>
+```
+
+The body of the request has to be JSON and can contain any/some/all of the following values:
+```
+{
+    "on": true|false
+}
+```

@@ -5,6 +5,7 @@ const Bottleneck = require('bottleneck');
 const ColorConversion = require('./color-conversion');
 const LightBulbDevice = require('./light-bulb-device');
 const MotionSensorDevice = require('./motion-sensor-device');
+const PhilipsHueApi = require('./philips-hue-api');
 
 /**
  * Initializes a new platform instance for the Philips Hue plugin.
@@ -42,6 +43,9 @@ function PhilipsHuePlatform(log, config, api) {
     platform.config.bridgeIpAddress = platform.config.bridgeIpAddress || null;
     platform.config.bridgeApiUsername = platform.config.bridgeApiUsername || null;
     platform.config.blacklist = platform.config.blacklist || [];
+    platform.config.isApiEnabled = platform.config.isApiEnabled || false;
+    platform.config.apiPort = platform.config.apiPort || 40660;
+    platform.config.apiToken = platform.config.apiToken || null;
     platform.config.bridgePort = 80;
     platform.config.bridgeApiTimeout = 15000;
     platform.config.requestsPerSecond = 5;
@@ -152,6 +156,15 @@ function PhilipsHuePlatform(log, config, api) {
             platform.log('Error while getting the lights. Please check the credentials.');
         }));
 
+        // Prints out group information for API usage
+        promises.push(platform.limiter.schedule(function() { return platform.client.groups.getAll(); }).then(function(groups) {
+            for (let i = 0; i < groups.length; i++) {
+                platform.log('Group with API ID ' + groups[i].id + ' and name ' + groups[i].name + ' found.');
+            }
+        }, function() {
+            platform.log('Error while getting the groups. Please check the credentials.');
+        }));
+
         // Removes the accessories that are not bound to a light bulb or motion sensor
         Promise.all(promises).then(function() {
             let unusedAccessories = platform.accessories.filter(function(a) { return !platform.devices.some(function(l) { return l.uniqueId === a.context.uniqueId; }); });
@@ -174,7 +187,7 @@ function PhilipsHuePlatform(log, config, api) {
                 });
             }, platform.config.updateInterval);
 
-            // Starts the timer for updating lights
+            // Starts the timer for updating sensors
             setTimeout(function() {
                 setInterval(function() {
                     platform.limiter.schedule(function() { return platform.client.sensors.getAll(); }).then(function(sensors) {
@@ -190,6 +203,11 @@ function PhilipsHuePlatform(log, config, api) {
 
             // Initialization completed
             platform.log('Initialization completed.');
+
+            // Starts the API if requested
+            if (platform.config.isApiEnabled) {
+                platform.philipsHueApi = new PhilipsHueApi(platform);
+            }
         });
     });
 }
