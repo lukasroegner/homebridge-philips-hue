@@ -41,6 +41,7 @@ function PhilipsHuePlatform(log, config, api) {
     // Initializes the configuration
     platform.config.bridgeIpAddress = platform.config.bridgeIpAddress || null;
     platform.config.bridgeApiUsername = platform.config.bridgeApiUsername || null;
+    platform.config.blacklist = platform.config.blacklist || [];
     platform.config.bridgePort = 80;
     platform.config.bridgeApiTimeout = 15000;
     platform.config.requestsPerSecond = 5;
@@ -91,10 +92,14 @@ function PhilipsHuePlatform(log, config, api) {
                 const light = lights[i];
 
                 // Creates the light bulb instance and adds it to the list of all devices
-                platform.log('Create light bulb with unique ID ' + light.uniqueId + '.');
-                const device = new LightBulbDevice(platform, light);
-                platform.lightBulbs.push(device);
-                platform.devices.push(device);
+                if (platform.config.blacklist.indexOf(light.uniqueId) !== -1) {
+                    platform.log('Light bulb with unique ID ' + light.uniqueId + ' and name ' + light.name + ' blacklisted.');
+                } else {
+                    platform.log('Create light bulb with unique ID ' + light.uniqueId + ' and name ' + light.name + '.');
+                    const device = new LightBulbDevice(platform, light);
+                    platform.lightBulbs.push(device);
+                    platform.devices.push(device);
+                }
             }
         }, function() {
             platform.log('Error while getting the lights. Please check the credentials.');

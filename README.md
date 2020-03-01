@@ -49,7 +49,11 @@ Hint: Use a software like Postman or cURL to make the requests.
         {
             "platform": "PhilipsHuePlatform",
             "bridgeIpAddress": "<BRIDGE-IP-ADDRESS>",
-            "bridgeApiUsername": "<BRIDGE-API-USERNAME>"
+            "bridgeApiUsername": "<BRIDGE-API-USERNAME>",
+            "blacklist": [
+                "<UNIQUE-ID-1>",
+                "<UNIQUE-ID-2>"
+            ]
         }
     ]
 }
@@ -58,3 +62,5 @@ Hint: Use a software like Postman or cURL to make the requests.
 **bridgeIpAddress**: The IP address of your Philips Hue bridge.
 
 **bridgeApiUsername**: The access token for the user.
+
+**blacklist** (optional): A list of unique IDs that should not be exposed to HomeKit. The IDs can be retrieved in the log when homebridge is started.
