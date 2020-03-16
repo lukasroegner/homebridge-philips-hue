@@ -91,6 +91,7 @@ function PhilipsHuePlatform(log, config, api) {
 
         // Initially gets the lights from the API
         const promises = [];
+        let error = false;
         promises.push(platform.limiter.schedule(function() { return platform.client.lights.getAll(); }).then(function(lights) {
             for (let i = 0; i < lights.length; i++) {
                 const light = lights[i];
@@ -107,6 +108,7 @@ function PhilipsHuePlatform(log, config, api) {
             }
         }, function() {
             platform.log('Error while getting the lights. Please check the credentials.');
+            error = true;
         }));
 
         // Initially gets the sensors from the API
@@ -151,9 +153,11 @@ function PhilipsHuePlatform(log, config, api) {
                 }
             }, function() {
                 platform.log('Error while getting the rules. Please check the credentials.');
+                error = true;
             });
         }, function() {
             platform.log('Error while getting the lights. Please check the credentials.');
+            error = true;
         }));
 
         // Prints out group information for API usage
@@ -163,10 +167,19 @@ function PhilipsHuePlatform(log, config, api) {
             }
         }, function() {
             platform.log('Error while getting the groups. Please check the credentials.');
+            error = true;
         }));
 
         // Removes the accessories that are not bound to a light bulb or motion sensor
         Promise.all(promises).then(function() {
+
+            // Checks if any error occurred
+            if (error) {
+                platform.log('Error while initializing.');
+                return;
+            }
+
+            // Removes the unused accessories
             let unusedAccessories = platform.accessories.filter(function(a) { return !platform.devices.some(function(l) { return l.uniqueId === a.context.uniqueId; }); });
             for (let i = 0; i < unusedAccessories.length; i++) {
                 const unusedAccessory = unusedAccessories[i];
